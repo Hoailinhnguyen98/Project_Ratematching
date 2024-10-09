@@ -17,35 +17,39 @@
 
 #include "Source.h"
 #include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
 
 
-void Source::configure(const std::string& inputFilePath) {
-    //std::cout << "Configuring Source module" << std::endl;
-    inputFile.open(inputFilePath);
+void Source::source_thread() {
+
+    /****** Read data from file ******/
+
+    std::string inputFilePath = "C:/Users/ADMIN/Desktop/Project_Ratematching/io/input/input_data1.txt";
+    std::ifstream inputFile(inputFilePath);
     if (!inputFile.is_open()) {
         std::cerr << "Error: Could not open file " << inputFilePath << std::endl;
         return;
     }
+    std::vector<sc_lv<128>> dataBuffer;
 
     // Read lines from the file and store them in dataBuffer
     std::string line;
     while (std::getline(inputFile, line)) {
-        // Convert each line to sc_lv<128> and store it in the buffer
-        // std::cout << "Line: " << line << std::endl;
         if (line.length() == 128) {
-            //dataBuffer.push_back(sc_lv<128>(line.c_str()));
             dataBuffer.push_back(sc_lv<128>(line.c_str()));
+        }
+        else {
+            std::cerr << "Warning: Skipping line with invalid length: " << line.length() << std::endl;
         }
     }
 
-
     inputFile.close(); // Close the file after reading
 
-}
+    /***** Send data to FIFO ******/ 
 
-void Source::source_thread() {
-
-    dataCount = 0;           // Reset data counter
+    int dataCount = 0;           // Reset data counter
     std::cout << "Source: Sending data to RateMatching (dataCount: " << dataCount << ")" << std::endl; // Print datacout
     sc_lv<128> data = dataBuffer[dataCount];
     std::cout << "Source: Sending data to RateMatching: " << data << std::endl;

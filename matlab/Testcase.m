@@ -7,11 +7,27 @@ clc;
 clear all;
 addpath(genpath(pwd));
 
-% Parameters
-rv = 3;                 % Redundancy version
-modulation = '256QAM';    % Modulation type
-nlayers = 4;            % Number of layers
-Nref = [];
+%% Config Parameters
+inlen       = 1320; % Input length
+outlen      = 2000; %Output length
+rv          = 3;                 % Redundancy version
+modulation  = '256QAM';    % Modulation type
+switch modulation
+    case 'BPSK'
+        Qm = 1;
+    case 'QPSK'
+        Qm = 2;
+    case '16QAM'
+        Qm = 4;
+    case '64QAM'
+        Qm = 6;
+    case '256QAM'
+        Qm = 8;
+    otherwise   % '1024QAM'
+        Qm = 10;
+end
+nlayers     = 4;            % Number of layers
+Nref        = 0;
 % Check if Nref is empty
 if isempty(Nref)
     Nref_txt = 'NoNref';
@@ -19,12 +35,27 @@ else
     Nref_txt = num2str(Nref);
 end
 
-%% LDPC Processing
+% Open the file for writing
+fileID = fopen('../io/input/config_inputdata1.txt', 'w');
+
+% Write the configuration to the file in the specified format
+fprintf(fileID, 'input_length: %d\n', inlen);
+fprintf(fileID, 'output_length: %d\n', outlen);
+fprintf(fileID, 'redundancy_version: %d\n', rv);
+fprintf(fileID, 'layer: %d\n', nlayers);
+fprintf(fileID, 'modulation_type: %d\n', Qm);
+fprintf(fileID, 'Nref: %d\n', Nref);
+
+% Close the file
+fclose(fileID);
+
+% Notify that the file has been written
+disp('Configuration file "config_inputdata1.txt" generated.');
+
+%% Generate input and output
 % LDPC encoding
 %encoded = ones(1320,1);
-encoded = randi([0,1], 1320,1);
-% Rate matching and code block concatenation
-outlen = 2000;
+encoded = randi([0,1], inlen ,1);
 
 %% Save inputfile
 % Open a text file for writing
@@ -40,20 +71,5 @@ save(fname_out, "ratematched");
 save_128bit_per_line(fname_out, ratematched)
 
 %% nrRateMatchLDPC2 function (function is modified)
-% Get modulation order
-switch modulation
-    case 'BPSK'
-        Qm = 1;
-    case 'QPSK'
-        Qm = 2;
-    case '16QAM'
-        Qm = 4;
-    case '64QAM'
-        Qm = 6;
-    case '256QAM'
-        Qm = 8;
-    otherwise   % '1024QAM'
-        Qm = 10;
-end
 ratematched2 = nrRateMatchLDPC_modify(encoded, outlen,rv, Qm, nlayers);
 sum(ratematched - ratematched2)

@@ -31,6 +31,8 @@
 #include <cmath>
 #include <vector>
 #include "myLibrary.h"
+#include <fstream>
+#include <sstream>
 
 /*************** Define constants**************/
 
@@ -42,138 +44,63 @@ const std::vector<int> ZcVec = {
 };
 
 /*************** Define functions**************/
-// Configuration method
-void RateMatching::configure(int inlen, int outlen, int rv, int Qm, int nlayers, int Nref) {
-    this->inlen = inlen;
-    this->outlen = outlen;
-    this->rv = rv;
-    this->Qm = Qm;
-    this->nlayers = nlayers;
-    this->Nref = Nref;
-}
 
-std::vector<int> RateMatching::performRateMatching(const std::vector<int>& inputData) {
-
-    std::vector<int> input(inputData.begin(), inputData.begin() + inlen);
-
-    // Validate input data
-    if (inputData.empty()) {
-        std::cerr << "Input data is empty." << std::endl;
-        return {};  // Return empty vector on invalid input
-    }
-
-    // Get code block soft buffer size
-    int minValue = (inlen < Nref) ? inlen : Nref;
-    int Ncb = (Nref != 0) ? minValue : inlen;
-
-    // Determine base graph number from N
-    int bgn, ncwnodes, Zc;
-    bool found = 0;
-    for (size_t i = 0; i < ZcVec.size(); ++i) {
-        if (inlen == ZcVec[i] * 66) {
-            found = 1;
-        }
-    }
-
-    if (found) {
-        bgn = 1;
-        ncwnodes = 66;
-    }
-    else {
-        bgn = 2;
-        ncwnodes = 50;
-    }
-    Zc = inlen / ncwnodes;
-
-    // Get starting position in circular buffer
-    int k0;
-    if (bgn == 1) {
-        if (rv == 0) {
-            k0 = 0;
-        }
-        else if (rv == 1) {
-
-            k0 = myFloor(17.0 * Ncb / inlen) * Zc;
-        }
-        else if (rv == 2) {
-
-            k0 = myFloor(33.0 * Ncb / inlen) * Zc;
-        }
-        else {
-
-            k0 = myFloor(56.0 * Ncb / inlen) * Zc;
-        }
-    }
-    else {
-        if (rv == 0) {
-            k0 = 0;
-        }
-        else if (rv == 1) {
-            k0 = myFloor(13.0 * Ncb / inlen) * Zc;
-
-        }
-        else if (rv == 2) {
-            k0 = myFloor(25.0 * Ncb / inlen) * Zc;
-
-        }
-        else {
-            k0 = myFloor(43.0 * Ncb / inlen) * Zc;
-
-        }
-    }
-
-    int E = (1 - (outlen / (nlayers * Qm)) - 1) >= 0 ? nlayers * Qm * myFloor(static_cast<double>(outlen) / (nlayers * Qm))
-        : nlayers * Qm * myCeil(static_cast<double>(outlen) / (nlayers * Qm));
-
-    // Perform rate matching
-    std::vector<int> e(E, 0);
-    int k = 0;
-    int j = 0;
-
-
-    while (k < E) {
-        if (input[(k0 + j) % Ncb] != -1) {
-            e[k] = input[(k0 + j) % Ncb];
-            ++k;
-        }
-        ++j;
-    }
-
-    // Bit Interleaving
-    int rows = E / Qm;
-    std::vector<int> e_reshaped(E);
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < Qm; ++j) {
-            e_reshaped[i * Qm + j] = e[j * rows + i];
-        }
-    }
-
-    std::vector<int> outputData;
-    outputData = e_reshaped; // Assuming e_reshaped is defined and has the correct data
-    return outputData;
-}
-
-std::vector<int> convertToVector(const sc_lv<MAX_FIFO_SIZE>& bitString) {
-    std::vector<int> result;
-    result.reserve(MAX_FIFO_SIZE);
-
-    for (int i = 0; i < MAX_FIFO_SIZE; ++i) {
-        char bit = bitString[i].to_char();
-        if (bit == '0') {
-            result.push_back(0);
-        }
-        else if (bit == '1') {
-            result.push_back(1);
-        }
-        else {
-            throw std::invalid_argument("Invalid character in bit string at position " + std::to_string(i));
-        }
-    }
-
-    return result;
-}
 // Main rate matching function
 void RateMatching::Ratematchingfunction() {
+
+    RateMatchingConfig config;
+
+    // Define the file path
+    std::string filename = "C:/Users/ADMIN/Desktop/Project_Ratematching/io/input/config_inputdata1.txt";
+
+    // Open the file
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file " << filename << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        std::string key;
+        int value;
+
+        // Extract key and value
+        if (std::getline(iss, key, ':') && iss >> value) {
+            // Remove whitespace
+            key.erase(remove(key.begin(), key.end(), ' '), key.end());
+
+            if (key == "input_length") {
+                config.inlen = value;
+            }
+            else if (key == "output_length") {
+                config.outlen = value;
+            }
+            else if (key == "redundancy_version") {
+                config.rv = value;
+            }
+            else if (key == "layer") {
+                config.nlayers = value;
+            }
+            else if (key == "modulation_type") {
+                config.Qm = value;
+            }
+            else if (key == "Nref") {
+                config.Nref = value;
+            }
+            else {
+                std::cerr << "Warning: Unrecognized key in config file: " << key << std::endl;
+            }
+        }
+        else {
+            std::cerr << "Warning: Incorrect format in line: " << line << std::endl;
+        }
+    }
+
+	// Close the file
+    file.close();
+
     while (true) {
         wait(); // Wait for clock edge
         if (rst.read()) { // Reset behavior
@@ -223,7 +150,25 @@ void RateMatching::Ratematchingfunction() {
         if (allDataWritten && !dataFIFO.empty()) {
             std::cout << "RateMatching: Starting rate matching process." << std::endl;
 
-            // Step 1: Concatenate all FIFO data into a single large data string
+            // Read configuration values from fileConfig
+            int inlen = config.inlen;
+            int outlen = config.outlen;
+            int rv = config.rv;
+            int nlayers = config.nlayers;
+            int Qm = config.Qm;
+            int Nref = config.Nref;
+
+            // Print loaded configuration values
+            std::cout << "Config Loaded: " << std::endl;
+            std::cout << "  Input Length (inlen): " << config.inlen << std::endl;
+            std::cout << "  Output Length (outlen): " << config.outlen << std::endl;
+            std::cout << "  Redundancy Version (rv): " << config.rv << std::endl;
+            std::cout << "  Number of Layers (nlayers): " << config.nlayers << std::endl;
+            std::cout << "  Modulation Type (Qm): " << config.Qm << std::endl;
+            std::cout << "  Nref: " << config.Nref << std::endl;
+
+
+            //Concatenate all FIFO data into a single large data string
             sc_lv<MAX_FIFO_SIZE> concatenatedData; // Assuming 5200-bit buffer
             int bitIndex = 0;
 
@@ -241,11 +186,125 @@ void RateMatching::Ratematchingfunction() {
             std::cout << "RateMatching: Concatenated data size: " << bitIndex << " bits." << std::endl;
 
             //Convert concatenatedData to vector
-            std::vector<int> concatenatedDataVector = convertToVector(concatenatedData);
+            //std::vector<int> concatenatedDataVector = convertToVector(concatenatedData);
+            std::vector<int> concatenatedDataVector;
+            concatenatedDataVector.reserve(MAX_FIFO_SIZE);
 
-            //Perform rate matching on the entire concatenated data
+            for (int i = 0; i < MAX_FIFO_SIZE; ++i) {
+                char bit = concatenatedData[i].to_char();
+                if (bit == '0') {
+                    concatenatedDataVector.push_back(0);
+                }
+                else if (bit == '1') {
+                    concatenatedDataVector.push_back(1);
+                }
+                else {
+                    throw std::invalid_argument("Invalid character in bit string at position " + std::to_string(i));
+                }
+            }
 
-            std::vector<int> rateMatchedData = performRateMatching(concatenatedDataVector);
+            /**************Perform rate matching********************/
+			std::cout << "RateMatching: Performing rate matching on the entire concatenated data." << std::endl;
+
+            // Get input vector with inlen elements
+            std::vector<int> input(concatenatedDataVector.begin(), concatenatedDataVector.begin() + inlen);
+
+            // Get code block soft buffer size
+            int minValue = (inlen < Nref) ? inlen : Nref;
+            int Ncb = (Nref != 0) ? minValue : inlen;
+
+            // Determine base graph number from N
+            int bgn, ncwnodes, Zc;
+            bool found = 0;
+            for (size_t i = 0; i < ZcVec.size(); ++i) {
+                if (inlen == ZcVec[i] * 66) {
+                    found = 1;
+                }
+            }
+
+            if (found) {
+                bgn = 1;
+                ncwnodes = 66;
+            }
+            else {
+                bgn = 2;
+                ncwnodes = 50;
+            }
+            Zc = inlen / ncwnodes;
+
+            // Get starting position in circular buffer
+            int k0;
+            if (bgn == 1) {
+                if (rv == 0) {
+                    k0 = 0;
+                }
+                else if (rv == 1) {
+                    k0 = myFloor(17.0 * Ncb / inlen) * Zc;
+                    //k0 = static_cast<int>(std::floor(17.0 * Ncb / inlen) * Zc);
+                }
+                else if (rv == 2) {
+                    k0 = myFloor(33.0 * Ncb / inlen) * Zc;
+                    //k0 = static_cast<int>(std::floor(33.0 * Ncb / inlen) * Zc);
+                }
+                else {
+                    k0 = myFloor(56.0 * Ncb / inlen) * Zc;
+                    //k0 = static_cast<int>(std::floor(56.0 * Ncb / inlen) * Zc);
+                }
+            }
+            else {
+                if (rv == 0) {
+                    k0 = 0;
+                }
+                else if (rv == 1) {
+                    k0 = myFloor(13.0 * Ncb / inlen) * Zc;
+                    //k0 = static_cast<int>(std::floor(13.0 * Ncb / inlen) * Zc);
+                }
+                else if (rv == 2) {
+                    k0 = myFloor(25.0 * Ncb / inlen) * Zc;
+                    //k0 = static_cast<int>(std::floor(25.0 * Ncb / inlen) * Zc);
+                }
+                else {
+                    k0 = myFloor(43.0 * Ncb / inlen) * Zc;
+                    //k0 = static_cast<int>(std::floor(43.0 * Ncb / inlen) * Zc);
+                }
+            }
+
+            int E = (1 - (outlen / (nlayers * Qm)) - 1) >= 0 ? nlayers * Qm * myFloor(static_cast<double>(outlen) / (nlayers * Qm))
+                : nlayers * Qm * myCeil(static_cast<double>(outlen) / (nlayers * Qm));
+
+            //    int E;
+            //    if ((1 - (outlen / (nlayers * Qm)) - 1)>=0)
+            //    {
+            //        E = nlayers * Qm * static_cast<int>(std::floor(static_cast<double>(outlen) / (nlayers * Qm)));
+            //    }
+            //    else {
+            //        E = nlayers * Qm * static_cast<int>(std::ceil(static_cast<double>(outlen) / (nlayers * Qm)));
+            //    }
+
+            // Perform rate matching
+            std::vector<int> e(E, 0);
+            int k = 0;
+            int j = 0;
+
+            while (k < E) {
+                if (input[(k0 + j) % Ncb] != -1) {
+                    e[k] = input[(k0 + j) % Ncb];
+                    ++k;
+                }
+                ++j;
+            }
+
+            // Bit Interleaving
+            int rows = E / Qm;
+            std::vector<int> e_reshaped(E);
+            for (int i = 0; i < rows; ++i) {
+                for (int j = 0; j < Qm; ++j) {
+                    e_reshaped[i * Qm + j] = e[j * rows + i];
+                }
+            }
+
+            std::vector<int> rateMatchedData;
+            rateMatchedData = e_reshaped; // output of rate matching
 
             //std::cout << "\nSize of rateMatchedData: " << rateMatchedData.size() << std::endl;
             //for (int i = 0; i < rateMatchedData.size(); ++i) {
@@ -318,3 +377,9 @@ void RateMatching::Ratematchingfunction() {
         }
     }
 }
+
+
+
+
+
+ 

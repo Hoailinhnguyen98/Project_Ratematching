@@ -2,9 +2,6 @@
 #define SOURCE_H
 
 #include <systemc.h>
-#include <string>
-#include <vector>
-#include <fstream>
 
 SC_MODULE(Source) {
 public:
@@ -22,16 +19,8 @@ public:
         async_reset_signal_is(rst, true);
     }
 
-    /*************** Public Member Functions ***************/
-    // Method to configure the source with an input file path
-    void configure(const std::string & inputFilePath);
-
 private:
     void source_thread();
-    /*************** Private Member Variables ***************/
-    std::ifstream inputFile;             // Input file stream
-    std::vector<sc_lv<128>> dataBuffer;  // Buffer to hold data lines
-    int dataCount;                       // Tracks the current row of data being processed
 };
 
 #endif

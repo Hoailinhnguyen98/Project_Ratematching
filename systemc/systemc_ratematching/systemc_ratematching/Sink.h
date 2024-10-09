@@ -18,13 +18,8 @@ public:
         sensitive << clk.pos();
         async_reset_signal_is(rst, true);
     }
-    // Configure the output file path
-    void configure(const std::string & outputFilePath);
 
 private:
-    std::ofstream outputFile;
-    int dataCount;
-
     void sink_thread();
 };
 
