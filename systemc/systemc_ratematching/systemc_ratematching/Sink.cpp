@@ -18,17 +18,24 @@
  /***************Include files**************/
 #include "Sink.h"
 #include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
 
 
-void Sink::configure(const std::string& outputFilePath) {
+void Sink::sink_thread() {
+
+    /****** Open file ******/
+    std::string outputFilePath = "C:/Users/ADMIN/Desktop/Project_Ratematching/io/output/output_data.txt";
+	std::ofstream outputFile;
     outputFile.open(outputFilePath);
     if (!outputFile.is_open()) {
         std::cerr << "Error: Failed to open output file: " << outputFilePath << std::endl;
     }
-}
 
-void Sink::sink_thread() {
-    dataCount = 0;
+	/****** Write data to file ******/
+
+    int dataCount = 0;
     while (true) {
         wait(); // Wait for clock edge
 
