@@ -22,7 +22,8 @@ int myCeil(double x) {
 // Check error function
 int checkError(const sc_lv<128>& sinkData, const sc_lv<128>& outputData) {
     int errorCount = 0;
-    for (size_t i = 0; i < sinkData.size(); ++i) {
+    for (size_t i = 0; i < (size_t)sinkData.size(); ++i)
+    {
 
         if (sinkData[i] != outputData[i]) {
             ++errorCount;

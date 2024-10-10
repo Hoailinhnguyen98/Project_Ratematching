@@ -26,7 +26,7 @@
 void Sink::sink_thread() {
 
     /****** Open file ******/
-    std::string outputFilePath = "C:/Users/ADMIN/Desktop/Project_Ratematching/io/output/output_data.txt";
+    std::string outputFilePath = "../../io/output/output_data.txt";
 	std::ofstream outputFile;
     outputFile.open(outputFilePath);
     if (!outputFile.is_open()) {

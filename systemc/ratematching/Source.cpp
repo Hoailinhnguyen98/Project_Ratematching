@@ -26,7 +26,7 @@ void Source::source_thread() {
 
     /****** Read data from file ******/
 
-    std::string inputFilePath = "C:/Users/ADMIN/Desktop/Project_Ratematching/io/input/input_data1.txt";
+    std::string inputFilePath = "../../io/input/input_data1.txt";
     std::ifstream inputFile(inputFilePath);
     if (!inputFile.is_open()) {
         std::cerr << "Error: Could not open file " << inputFilePath << std::endl;
@@ -62,7 +62,7 @@ void Source::source_thread() {
     while (true) {
 
         std::cout << std::endl;
-        if (dataCount  >= dataBuffer.size())
+        if (dataCount  >= (int)dataBuffer.size())
         {
             break;
         }    

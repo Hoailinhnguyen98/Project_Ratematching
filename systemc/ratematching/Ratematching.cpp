@@ -26,7 +26,7 @@
 
 
  /***************Include files**************/
-#include "RateMatching.h"
+#include "Ratematching.h"
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -51,7 +51,7 @@ void RateMatching::Ratematchingfunction() {
     RateMatchingConfig config;
 
     // Define the file path
-    std::string filename = "C:/Users/ADMIN/Desktop/Project_Ratematching/io/input/config_inputdata1.txt";
+    std::string filename = "../../io/input/config_inputdata1.txt";
 
     // Open the file
     std::ifstream file(filename);
@@ -322,7 +322,7 @@ void RateMatching::Ratematchingfunction() {
 
             // Load data from MATLAB file
             int numCount = 0;
-            std::string filePath = "C:/Users/ADMIN/Desktop/Project_Ratematching/io/output/output_data1_matlab.txt";
+            std::string filePath = "../../io/output/output_data1_matlab.txt";
             std::vector<sc_lv<128>> dataBuffer;
             // Call the function to read data
             readDataFromFile(filePath, dataBuffer);

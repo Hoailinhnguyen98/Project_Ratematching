@@ -1,5 +1,5 @@
 ﻿#include "systemc.h"
-#include "RateMatching.h"
+#include "Ratematching.h"
 #include "Source.h"
 #include "Sink.h"
 
