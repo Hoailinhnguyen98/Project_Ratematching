@@ -1,6 +1,6 @@
 /*
  * ==============================================
- * File:        Ratematching.cpp
+ * File:        ratematching.cpp
  * Author:      linhnth@soc.one
  * Date Created: 
  * Date Updated: 04 October 2024
@@ -26,7 +26,7 @@
 
 
  /***************Include files**************/
-#include "Ratematching.h"
+#include "ratematching.h"
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -50,63 +50,13 @@ void RateMatching::Ratematchingfunction() {
 
     RateMatchingConfig config;
 
-    // Define the file path
-    std::string filename = "../../io/input/config_inputdata1.txt";
-
-    // Open the file
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not open file " << filename << std::endl;
-        return;
-    }
-
-    std::string line;
-    while (std::getline(file, line)) {
-        std::istringstream iss(line);
-        std::string key;
-        int value;
-
-        // Extract key and value
-        if (std::getline(iss, key, ':') && iss >> value) {
-            // Remove whitespace
-            key.erase(remove(key.begin(), key.end(), ' '), key.end());
-
-            if (key == "input_length") {
-                config.inlen = value;
-            }
-            else if (key == "output_length") {
-                config.outlen = value;
-            }
-            else if (key == "redundancy_version") {
-                config.rv = value;
-            }
-            else if (key == "layer") {
-                config.nlayers = value;
-            }
-            else if (key == "modulation_type") {
-                config.Qm = value;
-            }
-            else if (key == "Nref") {
-                config.Nref = value;
-            }
-            else {
-                std::cerr << "Warning: Unrecognized key in config file: " << key << std::endl;
-            }
-        }
-        else {
-            std::cerr << "Warning: Incorrect format in line: " << line << std::endl;
-        }
-    }
-
-	// Close the file
-    file.close();
-
     while (true) {
-        wait(); // Wait for clock edge
-        if (rst.read()) { // Reset behavior
+        wait();             // Wait for clock edge
+        if (rst.read()) {   // Reset behavior
             std::cout << "RateMatching: Reset signal received." << std::endl;
-            valid_out.write(false);
-            ready_out.write(false);
+            dout_valid.write(false);
+            din_ready.write(false);
+            config_ready.write(false);
 
             // Clear FIFO
             while (!dataFIFO.empty()) {
@@ -116,17 +66,32 @@ void RateMatching::Ratematchingfunction() {
             continue;
         }
 
-        ready_out.write(dataFIFO.size() < MAX_FIFO_SIZE); // Ready to receive data if FIFO isn't full
+        wait();
+        config_ready.write(true);
+        do { wait();} while (!config_valid);
+        config_ready.write(false);
 
-        while (!valid_in.read()) {
+        sc_lv<CFG_WIDTH> iConfigData;
+        iConfigData = config_data.read();
+
+        config.inlen    = iConfigData.range(15, 0).to_uint();
+        config.outlen   = iConfigData.range(31, 16).to_uint();
+        config.rv       = iConfigData.range(33, 32).to_uint();
+        config.nlayers  = iConfigData.range(36, 34).to_uint();
+        config.Qm       = iConfigData.range(40, 37).to_uint();
+        config.Nref     = iConfigData.range(46, 41).to_uint();
+
+        din_ready.write(dataFIFO.size() < MAX_FIFO_SIZE); // Ready to receive data if FIFO isn't full
+
+        while (!din_valid.read()) {
             wait();
         }
 
         // Push data into FIFO if valid and ready
-        if (valid_in.read() && ready_out.read()) {
+        if (din_valid.read() && din_ready.read()) {
             std::cout << "DataFIFO: Pushing data into FIFO." << dataFIFO.size() << std::endl;
             if (dataFIFO.size() < MAX_FIFO_SIZE) {
-                sc_lv<128> data = data_in.read();
+                sc_lv<128> data = din_data.read();
                 dataFIFO.push(data);
                 std::cout << "RateMatching: Data received and pushed into FIFO." << std::endl;
 
@@ -362,17 +327,17 @@ void RateMatching::Ratematchingfunction() {
                 std::cout << "Error: " << ERR << std::endl;
 
                 // Send each sinkdata to the output
-                data_out.write(sinkdata);  // Write the 128-bit sinkdata to the sink
-                valid_out.write(true);  // Indicate valid output
+                dout_data.write(sinkdata);  // Write the 128-bit sinkdata to the sink
+                dout_valid.write(true);  // Indicate valid output
                 wait();                 // Ensure the result is stable for one clock cycle
             }
 
             // After sending all sinkdata, signal that no more valid data remains
-            valid_out.write(false);
+            dout_valid.write(false);
             std::cout << "RateMatching: All rate-matched data sent to sink." << std::endl;
         }
         else {
-            valid_out.write(false); // No valid input
+            dout_valid.write(false); // No valid input
             std::cout << "RateMatching: Waiting for valid input data." << std::endl;
         }
     }

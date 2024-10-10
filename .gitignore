@@ -7,3 +7,4 @@ lib/
 *.o
 *.x
 *.log
+*.vcd

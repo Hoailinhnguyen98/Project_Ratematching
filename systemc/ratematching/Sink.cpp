@@ -64,4 +64,7 @@ void Sink::sink_thread() {
             std::cout << "Sink: Waiting for valid data." << std::endl;
         }
     }
+    
+    sc_stop();
+    return;
 }

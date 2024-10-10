@@ -14,19 +14,102 @@
  * 
  * ==============================================
  */
-
+#include "ratematching.h"
 #include "Source.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
-
+#include <sstream>
 
 void Source::source_thread() {
-
-    /****** Read data from file ******/
-
+    // Files
+    std::string cfgFilePath = "../../io/input/config_inputdata1.txt";
     std::string inputFilePath = "../../io/input/input_data1.txt";
+
+
+    /////////////////////////////////////
+    /****** Sending configuration ******/
+    /////////////////////////////////////
+    std::ifstream file(cfgFilePath);
+    if (!file.is_open())
+    {
+        std::cerr << "Error: Could not open file " << cfgFilePath << std::endl;
+        return;
+    }
+
+    RateMatchingConfig config;
+
+    std::string line;
+    while (std::getline(file, line))
+    {
+        std::istringstream iss(line);
+        std::string key;
+        int value;
+
+        if (std::getline(iss, key, ':') && iss >> value)
+        {
+            // Remove whitespace
+            key.erase(remove(key.begin(), key.end(), ' '), key.end());
+
+            if (key == "input_length")
+            {
+                config.inlen = value;
+            }
+            else if (key == "output_length")
+            {
+                config.outlen = value;
+            }
+            else if (key == "redundancy_version")
+            {
+                config.rv = value;
+            }
+            else if (key == "layer")
+            {
+                config.nlayers = value;
+            }
+            else if (key == "modulation_type")
+            {
+                config.Qm = value;
+            }
+            else if (key == "Nref")
+            {
+                config.Nref = value;
+            }
+            else
+            {
+                std::cerr << "Warning: Unrecognized key in config file: " << key << std::endl;
+            }
+        }
+        else
+        {
+            std::cerr << "Warning: Incorrect format in line: " << line << std::endl;
+        }
+    }
+
+    file.close();
+
+    sc_lv<CFG_WIDTH> configData;
+    configData.range(15, 0) = config.inlen;
+    configData.range(31, 16) = config.outlen;
+    configData.range(33, 32) = config.rv;
+    configData.range(36, 34) = config.nlayers;
+    configData.range(40, 37) = config.Qm;
+    configData.range(46, 41) = config.Nref;
+
+    config_data.write(configData);
+    config_valid.write(true);
+
+    while(!config_ready.read()) {
+        wait();
+    }
+
+    config_valid.write(false);
+    wait();
+
+    /////////////////////////////////////
+    /****** Sending input data    ******/
+    /////////////////////////////////////
     std::ifstream inputFile(inputFilePath);
     if (!inputFile.is_open()) {
         std::cerr << "Error: Could not open file " << inputFilePath << std::endl;
@@ -35,7 +118,6 @@ void Source::source_thread() {
     std::vector<sc_lv<128>> dataBuffer;
 
     // Read lines from the file and store them in dataBuffer
-    std::string line;
     while (std::getline(inputFile, line)) {
         if (line.length() == 128) {
             dataBuffer.push_back(sc_lv<128>(line.c_str()));
@@ -54,8 +136,8 @@ void Source::source_thread() {
     sc_lv<128> data = dataBuffer[dataCount];
     std::cout << "Source: Sending data to RateMatching: " << data << std::endl;
 
-    data_out.write(data);
-    valid_out.write(true); // Indicate valid data
+    source_data.write(data);
+    source_valid.write(true);   // Indicate valid data
     dataCount = dataCount + 1;
 
     // Main loop to send data to FIFO
@@ -69,7 +151,7 @@ void Source::source_thread() {
 
         // Check if reset signal is active
         if (rst.read()) {
-            valid_out.write(false);
+            source_valid.write(false);
             std::cout << "Source: Reset signal received." << std::endl;
             dataCount = 0;           // Reset data counter
             continue;                // Skip the rest of the loop
@@ -77,15 +159,15 @@ void Source::source_thread() {
 
 
         // Wait for FIFO to be ready
-        while (!ready_in.read()) {
+        while (!source_ready.read()) {
             wait(); // Wait until the FIFO is ready to accept data
         }
 
         // Send data only when FIFO is ready
-        if (ready_in.read()) {
+        if (source_ready.read()) {
             sc_lv<128> data = dataBuffer[dataCount];
-            data_out.write(data);
-            valid_out.write(true); // Indicate valid data
+            source_data.write(data);
+            source_valid.write(true); // Indicate valid data
             std::cout << "Source: Sending data to RateMatching: " << data << std::endl;
             std::cout << "Source: Sending data to RateMatching (dataCount: " << dataCount << ")" << std::endl;
             ++dataCount;
@@ -95,7 +177,7 @@ void Source::source_thread() {
     }
 
     // Signal that no more data will be sent
-    valid_out.write(false);
+    source_valid.write(false);
     std::cout << "Source: No more data to send." << std::endl;
 
 }

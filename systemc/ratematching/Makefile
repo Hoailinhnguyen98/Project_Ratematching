@@ -6,7 +6,7 @@
 # Author    : Nguyen Canh Trung
 # Email     : nguyencanhtrung 'at' me 'dot' com
 # Date      : 2024-08-12 14:38:26
-# Last Modified : 2024-10-10 17:35:21
+# Last Modified : 2024-10-10 18:15:52
 # Modified By   : Nguyen Canh Trung
 # ----------------------------------------------------------------------------
 # Description: 
@@ -37,7 +37,7 @@ FLAG_BATCH ?= 1
 FLAGS_STRICT = -Wno-unused-variable
 
 EXTRA_LIBS = 
-EXTRA_CLEAN =  
+EXTRA_CLEAN =  Ratematching.o 
 
 
 include ../scripts/library.mk
