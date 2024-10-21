@@ -62,7 +62,7 @@ void sink::sink_thread() {
             if (din_last.read()) {
                 std::cout << "Sink: Last data received. Total received: " << dataCount << " data counts." << std::endl;
                 din_ready.write(false);  // No more data to receive
-                break;  // Exit the loop since all data has been received
+                //break;  // Exit the loop since all data has been received
             }
         }
         else {
@@ -70,5 +70,6 @@ void sink::sink_thread() {
         }
     }
 
+    outputFile.close(); // Close the file after processing is complete
     sc_stop();
 }

@@ -253,22 +253,30 @@ void ratematching::ratematchingfunction() {
             std::vector<int> rateMatchedData = e_reshaped; // output of rate matching
             std::cout << std::endl;
             dout_valid.write(true); // Signal valid output
-            for (int start = 0; start < E; start += sizePort) {
+            int dRows = rateMatchedData.size();
+
+            // Transmit the rate matched data, with the last chunk condition
+            for (int start = 0; start < dRows; start += sizePort) {
                 sc_lv<128> sinkdata;
                 for (int i = 0; i < sizePort; ++i) {
-                    // Reverse the bit order by writing into the sinkdata from the opposite end
-                    sinkdata[sizePort - 1 - i] = (start + i < E) ? rateMatchedData[start + i] : 0; // Zero-padding
+                    sinkdata[sizePort - 1 - i] = (start + i < dRows) ? rateMatchedData[start + i] : 0; // Zero-padding
                 }
 
                 dout_data.write(sinkdata); // Write to output
+
+                // Signal dout_last if this is the last output chunk
+                if (start + sizePort >= dRows) {
+                    dout_last.write(true); // Indicate last data
+                    std::cout << "RateMatching: Last output data transmitted." << std::endl;
+                }
+
                 wait(); // Wait for the next clock cycle
             }
 
-            // Signal dout_last if this is the last output
-            if (din_last.read()) {
-                dout_last.write(true);
-                std::cout << "RateMatching: Last output data transmitted." << std::endl;
-            }
+            // Once the final output is sent, reset valid and last signals
+            dout_valid.write(false);
+            dout_last.write(false);
+            
         }
 
     }
