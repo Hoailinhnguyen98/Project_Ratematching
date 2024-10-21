@@ -1,5 +1,5 @@
 %% Generating test case for rate matching function
-% @author: Linhnth@soc.one
+% @author: Linhnth@hnsoc.one
 % @ Date : 08/09/2024
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -10,8 +10,8 @@ addpath(genpath(pwd));
 %% Config Parameters
 inlen       = 1320; % Input length
 outlen      = 2000; %Output length
-rv          = 3;                 % Redundancy version
-modulation  = '256QAM';    % Modulation type
+rv          = 1;                 % Redundancy version
+modulation  = '16QAM';    % Modulation type
 switch modulation
     case 'BPSK'
         Qm = 1;
@@ -26,7 +26,7 @@ switch modulation
     otherwise   % '1024QAM'
         Qm = 10;
 end
-nlayers     = 4;            % Number of layers
+nlayers     = 2;            % Number of layers
 Nref        = 0;
 % Check if Nref is empty
 if isempty(Nref)
@@ -36,7 +36,7 @@ else
 end
 
 % Open the file for writing
-fileID = fopen('../io/input/config_inputdata1.txt', 'w');
+fileID = fopen('../io/input/config_inputdata2.txt', 'w');
 
 % Write the configuration to the file in the specified format
 fprintf(fileID, 'input_length: %d\n', inlen);
@@ -50,7 +50,7 @@ fprintf(fileID, 'Nref: %d\n', Nref);
 fclose(fileID);
 
 % Notify that the file has been written
-disp('Configuration file "config_inputdata1.txt" generated.');
+disp('Configuration file "config_inputdata2.txt" generated.');
 
 %% Generate input and output
 % LDPC encoding
@@ -59,13 +59,13 @@ encoded = randi([0,1], inlen ,1);
 
 %% Save inputfile
 % Open a text file for writing
-input_filename = '../io/input/input_data1.txt';
+input_filename = '../io/input/input_data2.txt';
 %input_filename = strcat('./io/input/input_inlen', num2str(length(encoded)), '_outlen', num2str(outlen), '_rv',num2str(rv), '_nlayers', num2str(nlayers), '_', modulation,'_', Nref_txt, '.txt');
 save_128bit_per_line(input_filename, encoded)
 
 %% nrRateMatchLDPC function (standard function)
 ratematched = nrRateMatchLDPC(encoded,outlen,rv,modulation,nlayers);
-fname_out = '../io/output/output_data1_matlab.txt';
+fname_out = '../io/output/output_data2_matlab.txt';
 %fname_out = strcat('./io/output/output_inlen', num2str(length(encoded)), '_outlen', num2str(outlen), '_rv',num2str(rv), '_nlayers', num2str(nlayers), '_', modulation, '_', Nref_txt, '.mat');
 save(fname_out, "ratematched");
 save_128bit_per_line(fname_out, ratematched)

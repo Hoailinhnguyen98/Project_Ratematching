@@ -134,16 +134,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="myLibrary.h" />
-    <ClInclude Include="Ratematching.h" />
-    <ClInclude Include="Source.h" />
+    <ClInclude Include="ratematching.h" />
+    <ClInclude Include="source.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="myLibrary.cpp" />
-    <ClCompile Include="Ratematching.cpp" />
-    <ClCompile Include="Sink.cpp" />
-    <ClCompile Include="Sink.h" />
-    <ClCompile Include="Source.cpp" />
+    <ClCompile Include="ratematching.cpp" />
+    <ClCompile Include="sink.cpp" />
+    <ClCompile Include="sink.h" />
+    <ClCompile Include="source.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

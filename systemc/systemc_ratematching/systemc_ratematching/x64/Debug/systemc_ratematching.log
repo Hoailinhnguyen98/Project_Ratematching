@@ -1,13 +1,6 @@
-﻿  Ratematching.cpp
+﻿  sink.cpp
   Unknown compiler version - please run the configure tests and report the results
-C:\Users\ADMIN\Desktop\Project_Ratematching\systemc\systemc_ratematching\systemc_ratematching\Ratematching.cpp(154,23): warning C4244: 'initializing': conversion from 'sc_dt::uint_type' to 'int', possible loss of data
-C:\Users\ADMIN\Desktop\Project_Ratematching\systemc\systemc_ratematching\systemc_ratematching\Ratematching.cpp(155,24): warning C4244: 'initializing': conversion from 'sc_dt::uint_type' to 'int', possible loss of data
-C:\Users\ADMIN\Desktop\Project_Ratematching\systemc\systemc_ratematching\systemc_ratematching\Ratematching.cpp(156,20): warning C4244: 'initializing': conversion from 'sc_dt::uint_type' to 'int', possible loss of data
-C:\Users\ADMIN\Desktop\Project_Ratematching\systemc\systemc_ratematching\systemc_ratematching\Ratematching.cpp(157,25): warning C4244: 'initializing': conversion from 'sc_dt::uint_type' to 'int', possible loss of data
-C:\Users\ADMIN\Desktop\Project_Ratematching\systemc\systemc_ratematching\systemc_ratematching\Ratematching.cpp(158,20): warning C4244: 'initializing': conversion from 'sc_dt::uint_type' to 'int', possible loss of data
-C:\Users\ADMIN\Desktop\Project_Ratematching\systemc\systemc_ratematching\systemc_ratematching\Ratematching.cpp(159,22): warning C4244: 'initializing': conversion from 'sc_dt::uint_type' to 'int', possible loss of data
-  main.cpp
+  source.cpp
   Unknown compiler version - please run the configure tests and report the results
   Generating Code...
-x64\Debug\Sink.obj : warning LNK4042: object specified more than once; extras ignored
   systemc_ratematching.vcxproj -> C:\Users\ADMIN\Desktop\Project_Ratematching\systemc\systemc_ratematching\x64\Debug\systemc_ratematching.exe

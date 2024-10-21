@@ -1,0 +1,6 @@
+input_length: 1320
+output_length: 2000
+redundancy_version: 1
+layer: 2
+modulation_type: 4
+Nref: 0

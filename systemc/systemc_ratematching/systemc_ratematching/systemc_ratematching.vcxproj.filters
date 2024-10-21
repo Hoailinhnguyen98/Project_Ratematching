@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source.h">
+    <ClInclude Include="source.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Ratematching.h">
+    <ClInclude Include="ratematching.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="myLibrary.h">
@@ -26,16 +26,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Sink.h">
+    <ClCompile Include="sink.h">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="Ratematching.cpp">
+    <ClCompile Include="ratematching.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source.cpp">
+    <ClCompile Include="source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Sink.cpp">
+    <ClCompile Include="sink.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
